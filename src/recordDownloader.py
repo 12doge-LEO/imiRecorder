@@ -1,6 +1,5 @@
 import requests, struct
 from typing import List
-import urllib3
 
 
 class RecordDownloader:
