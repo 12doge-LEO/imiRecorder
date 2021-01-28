@@ -21,7 +21,7 @@ class RecordDownloader:
             'User-Agent': 'Mozilla / 5.0(WindowsNT 10.0; Win64;x64) AppleWebKit / 537.36(KHTML, likeGecko) Chrome / 87.0.4280.141 Safari / 537.36'
         }
 
-        self.TIME_STEP = 60
+        self.TIME_STEP = 300
 
     def get_recent_record_id(self):
         live_room_url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getList?room_id=22605466&page=1&page_size=20'
@@ -53,21 +53,24 @@ class RecordDownloader:
             with open(file_name, 'wb') as f:
                 f.write(response.content)
 
-    def get_dm_pool(self, rid):
+    def get_dm_pool(self, rid, total_time):
         dm_data = []
         dm_url = 'https://api.live.bilibili.com/xlive/web-room/v1/dM/getDMMsgByPlayBackID'
         index = str(0)
-        for i in range(10000):
+        for i in range(0,int(total_time / 3)):
             params = {
                 'rid': rid,
                 'index': str(i)
             }
+            print("tring to get dm: ", i)
+            response = requests.get(dm_url, headers=self.headers, params=params)
+            assert response.status_code == 200
             try:
-                response = requests.get(dm_url, headers=self.headers, params=params)
-                assert response.status_code == 200
+                print(dm_data)
+                json = response.json()
                 dm_data.extend(response.json()['data']['dm']['dm_info'])
             except:
-                break
+                continue
         return dm_data
 
     def analyze_dm_by_timestamp(self, dm_data):
@@ -81,6 +84,9 @@ class RecordDownloader:
 
         time_dm_matrix = []
         dm_content = get_dm_content_and_time(dm_data)
+
+        for item in dm_content:
+            print(item)
         print(len(dm_content))
 
         max_timestamps = 0
@@ -118,9 +124,12 @@ class RecordDownloader:
 if __name__ == '__main__':
     record_downloader = RecordDownloader()
     record_downloader.get_recent_record_id()
-    dm_data = record_downloader.get_dm_pool(record_downloader.record_list[0]['rid'])
-
     print(record_downloader.record_list[0])
+
+    dm_data = record_downloader.get_dm_pool(record_downloader.record_list[0]['rid'],
+                                            ((record_downloader.record_list[0]['end_timestamp'] -
+                                             record_downloader.record_list[0]['start_timestamp']) /60 ))
+
     time_dm_matrix = record_downloader.analyze_dm_by_timestamp(dm_data)
     print(time_dm_matrix)
     record_downloader.draw_dm_time_map(time_dm_matrix)
