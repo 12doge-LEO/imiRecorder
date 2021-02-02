@@ -1,6 +1,6 @@
 from src.recordDownloader import Record, RecordDownloader
 from src.email_sender import EmailSender
-
+import zipfile, os, re
 
 from datetime import datetime
 import time
@@ -16,10 +16,10 @@ if __name__ == '__main__':
 
     email_sender = EmailSender()
     for record in record_list:
-        print('Begin to send email, title: '+ str(record.name)
+        record.daily_workflow()
+
+        print('Begin to send email, title: ' + str(record.name)
               )
-        email_sender.data_builder(subject=record.name,date=str(datetime.fromtimestamp(record.start_timestamp)))
-        email_sender.send_mail()
+        email_sender.data_builder(subject=record.name, date=str(datetime.fromtimestamp(record.start_timestamp)))
+        # email_sender.send_mail()
         print('Send successfully')
-
-

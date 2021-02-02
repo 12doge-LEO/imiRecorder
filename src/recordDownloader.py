@@ -1,4 +1,6 @@
 import requests
+import json, os, zipfile
+import time
 from typing import List, Dict
 
 import matplotlib.pyplot as plt
@@ -27,6 +29,8 @@ class Record:
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
 
+        self.file_path = ''
+
     def download(self):
         for url in self.urls:
             file_name = './' + url.split('?')[0].split('/')[-1].replace(':', '-')
@@ -39,10 +43,10 @@ class Record:
             with open(file_name, 'wb') as f:
                 f.write(response.content)
 
-    def draw_dm_time_map(self, data):
+    def draw_dm_time_map(self, temp_dir=''):
 
-        x_data = [i for i in range(0, len(data))]
-        y_data = data
+        x_data = [i for i in range(0, len(self.analyzed_dm))]
+        y_data = self.analyzed_dm
 
         plt.plot(x_data, y_data, label='count', linewidth=3, color='b', marker='o',
                  markerfacecolor='blue', markersize=5)
@@ -57,11 +61,70 @@ class Record:
         for a, b in zip(x_data, y_data):
             plt.text(a, b, b, ha='center', va='bottom', fontsize=15)
 
-        plt.show()
+        plt.savefig(temp_dir + '/{}'.format(self.name) + '_dm_figure.png')
+        plt.close()
+
+    def sava_dm_as_json(self, temp_dir):
+        with open(temp_dir + '/{}'.format(self.name) + '_dm.json', 'w'
+                  ) as result:
+            json.dump(self.raw_dm, result, ensure_ascii=False)
+
+    def save_analyzed_dm_data(self, temp_dir):
+        def get_dm_content_and_time(_dm_data):
+            _dm_content = []  # type: List[Dict]
+
+            for temp_dm in _dm_data:
+                _dm_content.append(
+                    {'time': int(temp_dm['check_info']['ts'] / 1000), 'text': temp_dm['text']})
+            return _dm_content
+
+        time_dm_content = get_dm_content_and_time(self.raw_dm)
+        with open(temp_dir + '/{}'.format(self.name) + '_analyzed_dm.json', 'w'
+                  ) as result:
+            json.dump(time_dm_content, result, ensure_ascii=False)
+
+    def save_live_record_url(self, temp_dir):
+        with open(temp_dir + '/{}'.format(self.name) + '_record_urls.txt', 'w') as file:
+            for url in self.urls:
+                file.write(url + '\n')
+
+    def save_cover(self, temp_dir):
+        cover = requests.get(self.cover_url)
+        with open(temp_dir + '/{}'.format(self.name) + '_cover.png', 'wb') as file:
+            file.write(cover.content)
+
+    def daily_workflow(self):
+        temp_dir = '../resource/' + self.name + '_' + str(
+            time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(int(self.start_timestamp))))
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+            self.file_path = temp_dir
+        else:
+            return
+
+        def zipdir(path, ziph):
+            # ziph is zipfile handle
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    ziph.write(os.path.join(root, file),
+                               os.path.relpath(os.path.join(root, file), os.path.join(path, '..')))
+
+        self.draw_dm_time_map(temp_dir)
+        self.sava_dm_as_json(temp_dir)
+        self.save_analyzed_dm_data(temp_dir)
+        self.save_live_record_url(temp_dir)
+        self.save_cover(temp_dir)
+
+        file_path = self.file_path
+        zip_file_name = file_path + '.zip'
+
+        zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+        zipdir(file_path, zipf)
+        zipf.close()
 
 
 class RecordDownloader:
-    def __init__(self):
+    def __init__(self, max_count=1):
         self.url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getLiveRecordUrl?'
 
         self.live_room_url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getList?room_id=22605466&page=1' \
@@ -78,9 +141,11 @@ class RecordDownloader:
 
         self.TIME_STEP = 300
 
+        self.max_count = max_count
+
     def get_recent_record_id(self):
         self.live_room_url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getList?room_id=22605466&page=1' \
-                             '&page_size=5 '
+                             '&page_size=20'
 
         response = requests.get(self.live_room_url, headers=self.headers, params=self.reference)
 
@@ -93,7 +158,6 @@ class RecordDownloader:
         record_video_urls = [item['url'] for item in response.json()['data']['list']]
 
         return record_video_urls
-        # self.download_files(record_video_urls, record_video_name)
 
     def download_files(self, record_video_urls, record_video_name):
         for url in record_video_urls:
@@ -126,7 +190,7 @@ class RecordDownloader:
                 continue
         return dm_data
 
-    def create_record_instance(self, max_count=3):
+    def create_record_instance(self):
         temp_record_list = []
         count = 0
         for record in self.record_list:
@@ -141,7 +205,7 @@ class RecordDownloader:
             print('DM instance created')
             temp_record_list.append(temp_record)
             count += 1
-            if count >= max_count:
+            if count >= self.max_count:
                 break
         return temp_record_list
 
