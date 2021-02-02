@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
         print('Begin to send email, title: ' + str(record.name)
               )
-        email_sender.data_builder(subject=record.name, date=str(datetime.fromtimestamp(record.start_timestamp)))
-        # email_sender.send_mail()
+        email_sender.data_builder(subject=record.name, date=str(datetime.fromtimestamp(record.start_timestamp)),
+                                  files=[record.file_path + '/{}'.format(record.name) + '.zip'])
+        email_sender.send_mail()
         print('Send successfully')

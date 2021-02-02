@@ -100,6 +100,7 @@ class Record:
             os.makedirs(temp_dir)
             self.file_path = temp_dir
         else:
+            self.file_path = temp_dir
             return
 
         def zipdir(path, ziph):
@@ -116,7 +117,7 @@ class Record:
         self.save_cover(temp_dir)
 
         file_path = self.file_path
-        zip_file_name = file_path + '.zip'
+        zip_file_name = file_path + '/{}'.format(self.name) + '.zip'
 
         zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
         zipdir(file_path, zipf)
@@ -139,7 +140,7 @@ class RecordDownloader:
                           '87.0.4280.141 Safari / 537.36 '
         }
 
-        self.TIME_STEP = 300
+        self.TIME_STEP = 180
 
         self.max_count = max_count
 
