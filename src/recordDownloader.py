@@ -30,6 +30,7 @@ class Record:
         self.end_timestamp = end_timestamp
 
         self.file_path = ''
+        self.TIME_STEP = 180
 
     def download(self):
         for url in self.urls:
@@ -44,9 +45,12 @@ class Record:
                 f.write(response.content)
 
     def draw_dm_time_map(self, temp_dir=''):
+        plt.figure(figsize=(15,15))
 
-        x_data = [i for i in range(0, len(self.analyzed_dm))]
-        y_data = self.analyzed_dm
+        max_index = int((self.end_timestamp-self.start_timestamp)/self.TIME_STEP)
+
+        x_data = [i for i in range(0, max_index)]
+        y_data = self.analyzed_dm[0:max_index]
 
         plt.plot(x_data, y_data, label='count', linewidth=3, color='b', marker='o',
                  markerfacecolor='blue', markersize=5)
@@ -59,7 +63,7 @@ class Record:
 
         # 设置数字标签
         for a, b in zip(x_data, y_data):
-            plt.text(a, b, b, ha='center', va='bottom', fontsize=15)
+            plt.text(a, b, '({},{})'.format(a, b), ha='center', va='bottom', fontsize=15)
 
         plt.savefig(temp_dir + '/{}'.format(self.name) + '_dm_figure.png')
         plt.close()
@@ -117,7 +121,7 @@ class Record:
         self.save_cover(temp_dir)
 
         file_path = self.file_path
-        zip_file_name = file_path + '/{}'.format(self.name) + '.zip'
+        zip_file_name = '../resource' + '/{}'.format(self.name) + '.zip'
 
         zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
         zipdir(file_path, zipf)
