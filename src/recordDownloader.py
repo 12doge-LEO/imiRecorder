@@ -33,8 +33,8 @@ class Record:
         self.TIME_STEP = 180
 
         self.proxies = {
-            'http': 'http://' + '113.121.44.121:9999',
-            'https': 'https://' + '113.121.44.121:9999',
+            'http': 'http://' + '49.85.51.231:43664/',
+            'https': 'https://' + '49.85.51.231:43664/',
         }
 
     def download(self):
@@ -118,6 +118,7 @@ class Record:
                 for file in files:
                     ziph.write(os.path.join(root, file),
                                os.path.relpath(os.path.join(root, file), os.path.join(path, '..')))
+
         try:
             self.draw_dm_time_map(temp_dir)
             self.sava_dm_as_json(temp_dir)
@@ -203,9 +204,9 @@ class RecordDownloader:
             params = {
                 'rid': rid,
                 'index': str(i),
-                'Connection':'keep-alive'
+                'Connection': 'keep-alive'
             }
-            response = requests.get(dm_url, headers=self.headers, params=params,proxies = self.proxies )
+            response = requests.get(dm_url, headers=self.headers, params=params, proxies=self.proxies)
             assert response.status_code == 200
             try:
                 dm_data.extend(response.json()['data']['dm']['dm_info'])
