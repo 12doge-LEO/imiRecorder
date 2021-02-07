@@ -192,7 +192,8 @@ class RecordDownloader:
                 print('Getting DM index : {}/{}'.format(i, int(total_time / 3)))
             params = {
                 'rid': rid,
-                'index': str(i)
+                'index': str(i),
+                'Connection':'keep-alive'
             }
             response = requests.get(dm_url, headers=self.headers, params=params)
             assert response.status_code == 200
