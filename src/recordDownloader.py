@@ -32,6 +32,11 @@ class Record:
         self.file_path = ''
         self.TIME_STEP = 180
 
+        self.proxies = {
+            'http': 'http://' + '113.121.44.121:9999',
+            'https': 'https://' + '113.121.44.121:9999',
+        }
+
     def download(self):
         for url in self.urls:
             file_name = './' + url.split('?')[0].split('/')[-1].replace(':', '-')
@@ -155,6 +160,11 @@ class RecordDownloader:
 
         self.max_count = max_count
 
+        self.proxies = {
+            'http': 'http://' + '49.85.51.231:43664/',
+            'https': 'https://' + '49.85.51.231:43664/',
+        }
+
     def get_recent_record_id(self):
 
         self.live_room_url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getList?room_id=22605466&page=1' \
@@ -195,7 +205,7 @@ class RecordDownloader:
                 'index': str(i),
                 'Connection':'keep-alive'
             }
-            response = requests.get(dm_url, headers=self.headers, params=params)
+            response = requests.get(dm_url, headers=self.headers, params=params,proxies = self.proxies )
             assert response.status_code == 200
             try:
                 dm_data.extend(response.json()['data']['dm']['dm_info'])
