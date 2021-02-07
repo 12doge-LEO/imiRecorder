@@ -1,8 +1,10 @@
+import sys
+
+sys.path.append('../')
+
 from src.recordDownloader import Record, RecordDownloader
 from src.email_sender import EmailSender
 import zipfile, os, re
-import sys
-sys.path.append('../src')
 
 from datetime import datetime
 import time
