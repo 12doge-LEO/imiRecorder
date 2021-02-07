@@ -16,11 +16,12 @@ if __name__ == '__main__':
 
     email_sender = EmailSender()
     for record in record_list:
-        record.daily_workflow()
-
-        print('Begin to send email, title: ' + str(record.name)
-              )
-        email_sender.data_builder(subject=record.name, date=str(datetime.fromtimestamp(record.start_timestamp)),
-                                  files=['../resource' + '/{}'.format(record.name) + '.zip'])
-        email_sender.send_mail()
-        print('Send successfully')
+        if not record.daily_workflow():
+            print('This record is exits, pass')
+        else:
+            print('Begin to send email, title: ' + str(record.name)
+                  )
+            email_sender.data_builder(subject=record.name, date=str(datetime.fromtimestamp(record.start_timestamp)),
+                                      files=['../resource' + '/{}'.format(record.name) + '.zip'])
+            email_sender.send_mail()
+            print('Send successfully')

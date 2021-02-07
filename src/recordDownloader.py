@@ -45,9 +45,9 @@ class Record:
                 f.write(response.content)
 
     def draw_dm_time_map(self, temp_dir=''):
-        plt.figure(figsize=(15,15))
+        plt.figure(figsize=(15, 15))
 
-        max_index = int((self.end_timestamp-self.start_timestamp)/self.TIME_STEP)
+        max_index = int((self.end_timestamp - self.start_timestamp) / self.TIME_STEP)
 
         x_data = [i for i in range(0, max_index)]
         y_data = self.analyzed_dm[0:max_index]
@@ -105,7 +105,7 @@ class Record:
             self.file_path = temp_dir
         else:
             self.file_path = temp_dir
-            return
+            return False
 
         def zipdir(path, ziph):
             # ziph is zipfile handle
@@ -113,12 +113,14 @@ class Record:
                 for file in files:
                     ziph.write(os.path.join(root, file),
                                os.path.relpath(os.path.join(root, file), os.path.join(path, '..')))
-
-        self.draw_dm_time_map(temp_dir)
-        self.sava_dm_as_json(temp_dir)
-        self.save_analyzed_dm_data(temp_dir)
-        self.save_live_record_url(temp_dir)
-        self.save_cover(temp_dir)
+        try:
+            self.draw_dm_time_map(temp_dir)
+            self.sava_dm_as_json(temp_dir)
+            self.save_analyzed_dm_data(temp_dir)
+            self.save_live_record_url(temp_dir)
+            self.save_cover(temp_dir)
+        except:
+            print('DM error find please check')
 
         file_path = self.file_path
         zip_file_name = '../resource' + '/{}'.format(self.name) + '.zip'
@@ -127,9 +129,14 @@ class Record:
         zipdir(file_path, zipf)
         zipf.close()
 
+        with open('../resource/list.txt', 'a+') as file:
+            file.write(self.rid + '\n')
+
+        return True
+
 
 class RecordDownloader:
-    def __init__(self, max_count=1):
+    def __init__(self, max_count=5):
         self.url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getLiveRecordUrl?'
 
         self.live_room_url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getList?room_id=22605466&page=1' \
@@ -149,6 +156,7 @@ class RecordDownloader:
         self.max_count = max_count
 
     def get_recent_record_id(self):
+
         self.live_room_url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getList?room_id=22605466&page=1' \
                              '&page_size=20'
 
@@ -196,9 +204,22 @@ class RecordDownloader:
         return dm_data
 
     def create_record_instance(self):
+        record_rids = []
+        try:
+            with open('../resource/list.txt', 'r+') as file:
+                record_rids = file.read()
+                pass
+        except:
+            print('List  file is not exist, pass')
         temp_record_list = []
         count = 0
         for record in self.record_list:
+            if record['rid'] in record_rids:
+                count += 1
+                print('{} is exist, continue'.format(record['rid']))
+                if count >= self.max_count:
+                    break
+                continue
             temp_record = Record(rid=record['rid'], urls=self.get_live_record_by_id(record['rid']),
                                  name=record['title'], cover_url=record['cover'],
                                  start_timestamp=record['start_timestamp'], end_timestamp=record['end_timestamp'])
