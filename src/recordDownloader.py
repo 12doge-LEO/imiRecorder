@@ -206,7 +206,8 @@ class RecordDownloader:
                 'index': str(i),
                 'Connection': 'keep-alive'
             }
-            response = requests.get(dm_url, headers=self.headers, params=params, proxies=self.proxies)
+            response = requests.get(dm_url, headers=self.headers, params=params)
+            time.sleep(1)
             assert response.status_code == 200
             try:
                 dm_data.extend(response.json()['data']['dm']['dm_info'])
