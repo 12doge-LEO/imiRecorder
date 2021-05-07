@@ -19,7 +19,7 @@ class EmailSender:
 
         self.sender = 'doge12bot@163.com'
 
-        self.receiver = 'doge12bot@163.com'
+        self.receiver = '3143432614@qq.com'
 
         self.msg = MIMEMultipart('mixed')
 
@@ -27,7 +27,7 @@ class EmailSender:
         self.msg = MIMEMultipart('mixed')
         self.msg['Subject'] = subject
         self.msg['From'] = 'doge12bot@163.com <dobe12bot@163.com>'
-        self.msg['To'] = 'liusiruigood@gmail.com'
+        self.msg['To'] = '3143432614@qq.com'
         self.msg['Date'] = date
         for file_path in files:
             with open(file_path, 'rb') as fp:

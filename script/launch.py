@@ -5,7 +5,7 @@ sys.path.append('../')
 from src.recordDownloader import Record, RecordDownloader
 from src.email_sender import EmailSender
 import zipfile, os, re
-
+from src.db_helper import imi_db_connector
 from datetime import datetime
 import time
 
@@ -20,6 +20,9 @@ if __name__ == '__main__':
 
     email_sender = EmailSender()
     for record in record_list:
+        print(f"inserting data {record.name}")
+        imi_db_connector.insert(record.to_dict())
+
         if not record.daily_workflow():
             print('This record is exits, pass')
         else:

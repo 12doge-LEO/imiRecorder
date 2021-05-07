@@ -37,6 +37,12 @@ class Record:
             'https': 'https://' + '49.85.51.231:43664/',
         }
 
+    def to_dict(self):
+        record_dict = {"name": self.name, "date": self.date, "rid": self.rid, "urls": self.urls, "raw_dm": self.raw_dm,
+                       "analyzed_dm": self.analyzed_dm, "start_timestamp": self.start_timestamp,
+                       "end_timestamp": self.end_timestamp}
+        return record_dict
+
     def download(self):
         for url in self.urls:
             file_name = './' + url.split('?')[0].split('/')[-1].replace(':', '-')
@@ -142,7 +148,7 @@ class Record:
 
 
 class RecordDownloader:
-    def __init__(self, max_count=5):
+    def __init__(self, max_count=100):
         self.url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getLiveRecordUrl?'
 
         self.live_room_url = 'https://api.live.bilibili.com/xlive/web-room/v1/record/getList?room_id=22605466&page=1' \
@@ -199,20 +205,20 @@ class RecordDownloader:
         dm_data = []
         dm_url = 'https://api.live.bilibili.com/xlive/web-room/v1/dM/getDMMsgByPlayBackID'
         for i in range(0, int(total_time / 3)):
-            if i % 10 == 0 or i == int(total_time / 3) - 1:
-                print('Getting DM index : {}/{}'.format(i, int(total_time / 3)))
+            # if i % 10 == 0 or i == int(total_time / 3) - 1:
+                # print('Getting DM index : {}/{}'.format(i, int(total_time / 3)))
             params = {
                 'rid': rid,
                 'index': str(i),
                 'Connection': 'keep-alive'
             }
             response = requests.get(dm_url, headers=self.headers, params=params)
-            time.sleep(1)
+            # time.sleep(1)
             assert response.status_code == 200
             try:
                 dm_data.extend(response.json()['data']['dm']['dm_info'])
             except:
-                print('Error: dm get failed')
+                # print('Error: dm get failed')
                 continue
         return dm_data
 
@@ -229,7 +235,7 @@ class RecordDownloader:
         for record in self.record_list:
             if record['rid'] in record_rids:
                 count += 1
-                print('{} is exist, continue'.format(record['rid']))
+                # print('{} is exist, continue'.format(record['rid']))
                 if count >= self.max_count:
                     break
                 continue
@@ -239,9 +245,9 @@ class RecordDownloader:
             print('Creating record instance: ' + str(temp_record.name))
             temp_record.raw_dm = self.get_dm_pool(temp_record.rid,
                                                   (temp_record.end_timestamp - temp_record.start_timestamp) / 60)
-            print('Begin DM analysis...')
+            # print('Begin DM analysis...')
             temp_record.analyzed_dm = self.analyze_dm_by_timestamp(temp_record.raw_dm)
-            print('DM instance created')
+            # print('DM instance created')
             temp_record_list.append(temp_record)
             count += 1
             if count >= self.max_count:
